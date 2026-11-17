@@ -79,7 +79,8 @@ supabase/schema.sql       bookings table, overlap constraint, RLS policy
 
 ## Guest SMS (in progress, user asked 2026-11-17)
 
-Replaces the paused emails. Three messages, same content as the emails: confirmation on create, reminder the day before at 10:00 (address, arrival code, `INFO_URL`), and on check-out day at 08:00 the checkout-page link. Planned: same Edge Function + trigger + hourly cron pattern, plain `fetch` to the provider. Waiting on the user's choice of provider (comparison given: Vibrate, Micropay, sms4free, Twilio) and sender name.
+Texts are in `supabase/functions/booking-sms/templates.ts` (function itself not written yet). User's wording changes vs. the emails: confirmation ends "נשלח לכם את כל פרטי הכניסה"; the reminder says "סיסמה:" (value = `ARRIVAL_CODE`) and links to `ARRIVAL_URL` (a different page on the info site), not `INFO_URL`; the checkout SMS links to `SITE_URL?checkout=<token>`.
+Replaces the paused emails. Three messages: confirmation on create, reminder the day before at 10:00 (address, arrival code, `INFO_URL`), and on check-out day at 08:00 the checkout-page link. Planned: same Edge Function + trigger + hourly cron pattern, plain `fetch` to the provider. Waiting on the user's choice of provider (comparison given: Vibrate, Micropay, sms4free, Twilio) and sender name.
 
 ## Guest emails
 
