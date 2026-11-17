@@ -69,7 +69,7 @@ supabase/schema.sql       bookings table, overlap constraint, RLS policy
 
 ## Guest emails
 
-**Paused (user asked, 2026-11-12):** `supabase/emails-off.sql` drops the confirmation trigger and unschedules the cron; the function, secrets and columns stay. The app no longer shows sent status and the email field is just "אימייל". To resume: re-run `emails.sql` (it creates the URL secret only if missing, so the `quick-service` URL survives) and restore the sent rows in `BookingViewModal`.
+**Paused (user asked, 2026-11-12; applied and verified in the user's project 2026-11-17):** `supabase/emails-off.sql` drops the confirmation trigger and unschedules the cron; the function, secrets and columns stay. The app no longer shows sent status and the email field is just "אימייל". To resume: re-run `emails.sql` (it creates the URL secret only if missing, so the `quick-service` URL survives) and restore the sent rows in `BookingViewModal`.
 
 Free, via the user's Gmail (app password) from a Supabase Edge Function; setup steps in README. The user approved `nodemailer` for the function only (not in the frontend bundle).
 - Deployed name in the user's project is **`quick-service`** (dashboard auto-name; Supabase can't rename). The Vault secret `booking_emails_url` points to `/functions/v1/quick-service`. The repo folder keeps the name `booking-emails`.
