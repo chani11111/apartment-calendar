@@ -28,7 +28,6 @@ src/
   supabaseClient.js       client or null (demo mode)
   lib/                    pure logic, no React
     dates.js              YYYY-MM-DD string helpers, Hebrew month/day names
-    status.js             STATUS (label + Tailwind classes), NEXT_STATUS (quick-update button)
     calendar.js           buildMonthGrid, occupies, dayBookings, findOverlap
     booking.js            newBooking defaults, validateBooking
     whatsapp.js           wa.me link + message text
@@ -38,8 +37,8 @@ src/
     useBookings.js        bookings state + save/remove (errors are thrown to the caller)
     useAsyncAction.js     busy/error state shared by the modals
   components/
-    ui/                   Modal, Field, StatusBadge, styles.js (shared button/input classes)
-    calendar/             CalendarHeader, CalendarGrid, DayCell, BookingChip, DepartureTag, StatusLegend
+    ui/                   Modal, Field, HebrewDateInput, styles.js (shared button/input classes)
+    calendar/             CalendarHeader, CalendarGrid, DayCell, BookingChip, DepartureTag, MonthAgenda
     booking/              BookingFormModal, BookingViewModal
 supabase/schema.sql       bookings table, overlap constraint, RLS policy
 ```
@@ -49,17 +48,17 @@ supabase/schema.sql       bookings table, overlap constraint, RLS policy
 - Dates are `YYYY-MM-DD` strings everywhere (matches the Postgres `date` column); string comparison is date comparison. Avoid `toISOString()` (UTC shift).
 - A booking occupies nights `check_in <= day < check_out`. The check-out day is **free** for a new check-in and shows a `DepartureTag` instead of a chip.
 - Bookings may not overlap. This is checked in the form (`validateBooking`) and enforced in the DB (`bookings_no_overlap` exclusion constraint; error code `23P01` is mapped to Hebrew in `bookingsApi.js`).
-- Status flow: `scheduled → checked_in → checked_out → cleaned`. Any status can be set in the edit form.
+- Status is hidden from the UI (user asked, 2026-11-17): no badge, legend, form field or quick-update button; all chips use one color (`bg-sage/10 text-sage`). The `status` column stays; new bookings get `scheduled` (`newBooking`) and edits keep the existing value, because the reminder email filters on `scheduled`.
 - Phone numbers are assumed Israeli: leading `0` → `972` for wa.me.
 - Deviations from SPEC.md requested by the user: the name field is a general "שם" (not "שם משפחה"), shown without a "משפחת" prefix. The per-booking door code is removed from the UI, emails and WhatsApp; the `door_code` column stays in the DB with its default `1234`, unused. Do not confuse it with `ARRIVAL_CODE` (see Guest emails).
 
 ## Design decisions
 
-- Warm Minimalist palette from SPEC.md is defined as Tailwind colors in `tailwind.config.js` (`cream`, `line`, `sage`, `ink`, `muted`, `faint`, `clay`). Use these names, not hex values. Exception: the status colors are full class strings in `lib/status.js`.
+- Warm Minimalist palette from SPEC.md is defined as Tailwind colors in `tailwind.config.js` (`cream`, `line`, `sage`, `ink`, `muted`, `faint`, `clay`). Use these names, not hex values.
 - Borders instead of shadows. Rounded corners: `rounded-2xl` for cards and modals, `rounded-lg` for controls.
 - Multi-day stays are drawn as a continuous bar: one `BookingChip` per day, rounded corners and the family name only at the start of a segment (check-in day or Sunday) and corners at the end (last night or Saturday).
 - Use logical properties (`ps-`, `pe-`, `border-s`, `rounded-s-`, `text-start`) so RTL is handled automatically. In the header, "previous" is `ChevronRight`.
-- The view modal reads the booking from the list by id, so a status update shows immediately in the open modal.
+- The view modal reads the booking from the list by id, so changes show immediately in the open modal.
 - Delete asks for a second click instead of `window.confirm`.
 - Mobile-first: the app is headed for Android. Below Tailwind's `sm` (640px): short day names, departure tag as icon only, a floating "+" button instead of the header button, modals as bottom sheets, taller inputs with `text-base` (prevents focus zoom), and `MonthAgenda` (list of the month's stays) under the grid because names truncate in ~50px cells. Respect `env(safe-area-inset-bottom)` for anything fixed to the bottom.
 - Font: Heebo from Google Fonts (`index.html`).

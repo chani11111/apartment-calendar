@@ -1,7 +1,6 @@
 import { ChevronLeft } from 'lucide-react';
 import { monthBookings } from '../../lib/calendar';
 import { showShortDate } from '../../lib/dates';
-import StatusBadge from '../ui/StatusBadge';
 
 // רשימת השהויות של החודש, מוצגת רק בפלאפון שבו השמות בלוח נחתכים
 export default function MonthAgenda({ year, month, bookings, onOpen }) {
@@ -20,7 +19,6 @@ export default function MonthAgenda({ year, month, bookings, onOpen }) {
                   <span className="block truncate font-medium">{b.guest_name}</span>
                   <span className="text-xs text-muted">{showShortDate(b.check_in)} – {showShortDate(b.check_out)}</span>
                 </span>
-                <StatusBadge status={b.status} />
                 <ChevronLeft size={16} className="shrink-0 text-faint" />
               </button>
             </li>

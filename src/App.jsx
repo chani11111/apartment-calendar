@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import CalendarHeader from './components/calendar/CalendarHeader';
 import CalendarGrid from './components/calendar/CalendarGrid';
-import StatusLegend from './components/calendar/StatusLegend';
 import MonthAgenda from './components/calendar/MonthAgenda';
 import BookingFormModal from './components/booking/BookingFormModal';
 import BookingViewModal from './components/booking/BookingViewModal';
@@ -22,7 +21,7 @@ export default function App() {
   const close = () => setModal(null);
   const openForm = (data) => setModal({ type: 'form', data });
   const openView = (b) => setModal({ type: 'view', id: b.id });
-  // ההזמנה המוצגת נקראת מהרשימה, כדי שעדכון סטטוס יתעדכן במודאל הפתוח
+  // ההזמנה המוצגת נקראת מהרשימה, כדי ששינויים יתעדכנו במודאל הפתוח
   const viewing = modal?.type === 'view' && bookings.find((b) => b.id === modal.id);
 
   return (
@@ -40,7 +39,6 @@ export default function App() {
         onAddDay={(ds) => openForm(newBooking(ds))}
         onOpen={openView}
       />
-      <StatusLegend />
       <MonthAgenda year={year} month={month} bookings={bookings} onOpen={openView} />
       {!isMock && (
         <button type="button" onClick={() => supabase.auth.signOut()} className="mt-6 text-xs text-muted underline hover:text-ink">
@@ -58,7 +56,6 @@ export default function App() {
         <BookingViewModal
           booking={viewing} onClose={close}
           onEdit={() => openForm(viewing)}
-          onStatus={(status) => save({ ...viewing, status })}
           onDelete={async () => { await remove(viewing.id); close(); }}
         />
       )}

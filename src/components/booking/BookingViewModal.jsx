@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { Check, MessageCircle, Pencil, Trash2 } from 'lucide-react';
+import { MessageCircle, Pencil, Trash2 } from 'lucide-react';
 import Modal from '../ui/Modal';
-import StatusBadge from '../ui/StatusBadge';
 import { ghostBtn, primaryBtn } from '../ui/styles';
-import { NEXT_STATUS } from '../../lib/status';
 import { parse, showDate } from '../../lib/dates';
 import { showHebrewDate } from '../../lib/hebrewDate';
 import { whatsappLink } from '../../lib/whatsapp';
@@ -23,15 +21,13 @@ const DualDate = ({ ds }) => (
   </span>
 );
 
-export default function BookingViewModal({ booking: b, onClose, onEdit, onStatus, onDelete }) {
-  const next = NEXT_STATUS[b.status];
+export default function BookingViewModal({ booking: b, onClose, onEdit, onDelete }) {
   const { busy, error, run } = useAsyncAction();
   // מחיקה דורשת לחיצה שנייה לאישור
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
     <Modal title={b.guest_name} onClose={onClose}>
-      <div className="mb-3"><StatusBadge status={b.status} /></div>
       <Row label="טלפון"><span dir="ltr">{b.guest_phone || '—'}</span></Row>
       <Row label="כניסה"><DualDate ds={b.check_in} /></Row>
       <Row label="יציאה"><DualDate ds={b.check_out} /></Row>
@@ -43,11 +39,6 @@ export default function BookingViewModal({ booking: b, onClose, onEdit, onStatus
         <a className={`${primaryBtn} w-full`} href={whatsappLink(b)} target="_blank" rel="noreferrer">
           <MessageCircle size={18} /> שליחת פרטי הגעה בוואטסאפ
         </a>
-        {next && (
-          <button type="button" className={`${ghostBtn} w-full`} disabled={busy} onClick={() => run(() => onStatus(next.to))}>
-            <Check size={18} /> {next.label}
-          </button>
-        )}
         <button type="button" className={ghostBtn} onClick={onEdit}><Pencil size={16} /> עריכה</button>
         <button
           type="button" disabled={busy}
