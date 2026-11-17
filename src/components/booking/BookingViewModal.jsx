@@ -5,6 +5,7 @@ import { ghostBtn, primaryBtn } from '../ui/styles';
 import { parse, showDate } from '../../lib/dates';
 import { showHebrewDate } from '../../lib/hebrewDate';
 import { whatsappLink } from '../../lib/whatsapp';
+import { checkoutLink } from '../../lib/checkout';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 
 const Row = ({ label, children }) => (
@@ -32,6 +33,11 @@ export default function BookingViewModal({ booking: b, onClose, onEdit, onDelete
       <Row label="כניסה"><DualDate ds={b.check_in} /></Row>
       <Row label="יציאה"><DualDate ds={b.check_out} /></Row>
       <Row label="אימייל"><span dir="ltr">{b.guest_email || '—'}</span></Row>
+      <Row label="אישור יציאה">
+        {b.checkout_done_at
+          ? <span className="text-sage">✓ אושר ב-{new Date(b.checkout_done_at).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}</span>
+          : b.checkout_token ? <a className="text-sage underline" href={checkoutLink(b)} target="_blank" rel="noreferrer">טרם אושר · לדף היציאה</a> : 'טרם אושר'}
+      </Row>
       <p className="whitespace-pre-line py-3 text-sm text-muted">{b.notes || 'אין הערות'}</p>
       {error && <p className="mb-3 text-sm text-clay">{error}</p>}
 

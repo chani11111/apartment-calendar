@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { listBookings, createBooking, updateBooking, deleteBooking } from '../lib/bookingsApi';
+import { isMock, listBookings, createBooking, updateBooking, deleteBooking } from '../lib/bookingsApi';
 
 // רשימת ההזמנות והפעולות עליה. שגיאות שמירה ומחיקה נזרקות למודאל שקרא לפעולה.
 export function useBookings() {
@@ -7,7 +7,12 @@ export function useBookings() {
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
-    listBookings().then(setBookings).catch((e) => setLoadError('שגיאה בטעינת נתונים: ' + e.message));
+    const load = () => listBookings().then(setBookings).catch((e) => setLoadError('שגיאה בטעינת נתונים: ' + e.message));
+    load();
+    // טעינה מחדש כשחוזרים לאפליקציה, כדי לראות אישורי יציאה שהגיעו בינתיים
+    const onVisible = () => document.visibilityState === 'visible' && !isMock && load();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
   const save = async (b) => {

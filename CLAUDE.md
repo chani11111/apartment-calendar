@@ -31,6 +31,7 @@ src/
     calendar.js           buildMonthGrid, occupies, dayBookings, findOverlap
     booking.js            newBooking defaults, validateBooking
     whatsapp.js           wa.me link + message text
+    checkout.js           CHECKLIST items, checkoutLink, ?checkout= token from the URL
     mockData.js           demo bookings
     bookingsApi.js        CRUD; the only place that branches on demo vs Supabase
   hooks/
@@ -40,6 +41,7 @@ src/
     ui/                   Modal, Field, HebrewDateInput, styles.js (shared button/input classes)
     calendar/             CalendarHeader, CalendarGrid, DayCell, BookingChip, DepartureTag, MonthAgenda
     booking/              BookingFormModal, BookingViewModal
+    checkout/             CheckoutPage (public guest page, no login)
 supabase/schema.sql       bookings table, overlap constraint, RLS policy
 ```
 
@@ -49,6 +51,7 @@ supabase/schema.sql       bookings table, overlap constraint, RLS policy
 - A booking occupies nights `check_in <= day < check_out`. The check-out day is **free** for a new check-in and shows a `DepartureTag` instead of a chip.
 - Bookings may not overlap. This is checked in the form (`validateBooking`) and enforced in the DB (`bookings_no_overlap` exclusion constraint; error code `23P01` is mapped to Hebrew in `bookingsApi.js`).
 - Status is hidden from the UI (user asked, 2026-11-17): no badge, legend, form field or quick-update button; all chips use one color (`bg-sage/10 text-sage`). The `status` column stays; new bookings get `scheduled` (`newBooking`) and edits keep the existing value, because the reminder email filters on `scheduled`.
+- Name and phone are required (`validateBooking`; phone = 9-12 digits after stripping spaces/dashes/+). Email is optional.
 - Phone numbers are assumed Israeli: leading `0` → `972` for wa.me.
 - Deviations from SPEC.md requested by the user: the name field is a general "שם" (not "שם משפחה"), shown without a "משפחת" prefix. The per-booking door code is removed from the UI, emails and WhatsApp; the `door_code` column stays in the DB with its default `1234`, unused. Do not confuse it with `ARRIVAL_CODE` (see Guest emails).
 
@@ -66,6 +69,17 @@ supabase/schema.sql       bookings table, overlap constraint, RLS policy
 - The booking form picks dates by Hebrew day/month/year (`ui/HebrewDateInput.jsx`), showing the Gregorian date underneath; the stored value is still `YYYY-MM-DD`. Hebrew→Gregorian uses `hebrewYear()`, which scans a Hebrew year's days once and caches it (Intl only converts Gregorian→Hebrew). Adar ↔ Adar I/II is mapped when switching between regular and leap years.
 - Pending (user asked, 2026-11-02): replace guest emails with paid WhatsApp (Meta WhatsApp Cloud API, plain `fetch` from the Edge Function, approved templates for confirmation/reminder) plus a reply bot via webhook. Waiting on: phone number, what the bot should do, whether emails stay as backup.
 - Keep files short and logic single-sourced: shared classes in `ui/styles.js`, rules in `lib/`.
+
+## Checkout page (guest confirms departure)
+
+- `?checkout=<checkout_token>` makes `main.jsx` render `CheckoutPage` instead of `AuthGate`/`App`: the 7-item "לפני שיוצאים" checklist (`lib/checkout.js`, wording from the user's info site); the button is enabled when all are ticked.
+- DB (`schema.sql`): `checkout_token uuid default gen_random_uuid()` (unique) and `checkout_done_at`. The page has no session, so it uses two `security definer` RPCs granted to anon: `checkout_info(token)` (name, check_out, done_at of that one booking) and `confirm_checkout(token)` (sets `checkout_done_at` once). RLS on the table is unchanged.
+- Calendar: `DepartureTag` turns sage with a check icon when `checkout_done_at` is set; the view modal shows the time, or a link to the page. `useBookings` reloads when the app becomes visible again.
+- `COLUMNS` in `bookingsApi.js` includes the new columns, so `schema.sql` must be run in Supabase before deploying.
+
+## Guest SMS (in progress, user asked 2026-11-17)
+
+Replaces the paused emails. Three messages, same content as the emails: confirmation on create, reminder the day before at 10:00 (address, arrival code, `INFO_URL`), and on check-out day at 08:00 the checkout-page link. Planned: same Edge Function + trigger + hourly cron pattern, plain `fetch` to the provider. Waiting on the user's choice of provider (comparison given: Vibrate, Micropay, sms4free, Twilio) and sender name.
 
 ## Guest emails
 
